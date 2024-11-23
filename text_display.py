@@ -13,8 +13,19 @@ class TextDisplayApp(Gtk.Window):
         # Set window properties
         self.set_default_size(300, 100)
         self.set_keep_above(True)  # Keep window above others
-        self.set_position(Gtk.WindowPosition.MOUSE)
         self.set_decorated(False)
+
+        # Set the position to the upper-right corner of the screen
+        screen = Gdk.Screen.get_default()
+        screen_width = screen.get_width()
+        self.set_position(Gtk.WindowPosition.NONE)  # Allows precise control with move()
+        self.move(screen_width - 320, 10)  # Position with some padding from the edges
+
+        # Enable mouse dragging
+        self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        self.connect("button-press-event", self.on_button_press_event)
+        self.connect("motion-notify-event", self.on_motion_notify_event)
+        self.drag_start_position = None
 
         # Main container
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -44,7 +55,7 @@ class TextDisplayApp(Gtk.Window):
         self.label = Gtk.Label()
         self.label.set_line_wrap(True)
         self.label.set_line_wrap_mode(Gtk.WrapMode.WORD)
-        self.label.set_justify(Gtk.Justification.LEFT) # Gtk.Justification.CENTER
+        self.label.set_justify(Gtk.Justification.LEFT)  # Gtk.Justification.CENTER
         self.label.set_max_width_chars(30)
         main_box.pack_start(self.label, True, True, 10)
         
@@ -77,7 +88,6 @@ class TextDisplayApp(Gtk.Window):
             self.label.set_text(f"{Bible.get_verse_text(43003016)}")
         return True  # Continue calling this function
 
-
     def get_random_verse(self):
         books = list(Bible.Book)
         random_book = random.choice(books)
@@ -93,6 +103,18 @@ class TextDisplayApp(Gtk.Window):
 
     def minimize_window(self, button):
         self.iconify()
+
+    def on_button_press_event(self, widget, event):
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 1:  # Left mouse button
+            self.drag_start_position = (event.x_root, event.y_root)
+
+    def on_motion_notify_event(self, widget, event):
+        if self.drag_start_position:
+            delta_x = event.x_root - self.drag_start_position[0]
+            delta_y = event.y_root - self.drag_start_position[1]
+            window_x, window_y = self.get_position()
+            self.move(window_x + delta_x, window_y + delta_y)
+            self.drag_start_position = (event.x_root, event.y_root)
 
 def main():
     app = TextDisplayApp()
