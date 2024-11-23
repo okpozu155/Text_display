@@ -48,5 +48,6 @@ Future Enhancements
     Implement user customization for refresh rates and font settings via a settings panel.
     Allow users to select specific books, chapters, or the testament to display.
     Add functionality for saving favorite verses to a file.
+    Add 'Next' and 'Previous' verse button.
 
 This project is a simple yet effective way to keep the Word of God accessible throughout your day. Contributions and suggestions are welcome! 😊
