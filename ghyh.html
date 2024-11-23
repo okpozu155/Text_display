@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Verse Display: ASV</title>
+</head>
+<body>
+    <h1>Bible Verse Display: ASV</h1>
+
+    <p><strong>Bible Verse Display: ASV</strong> is a lightweight GTK-based application that periodically displays random Bible verses from the American Standard Version (ASV) in a minimalist floating window. The program is designed for quick inspiration and unobtrusive operation, making it a perfect tool for personal reflection or casual use.</p>
+
+    <h2>Features</h2>
+    <ul>
+        <li><strong>Random Bible Verses:</strong> Automatically fetches and displays a new verse every 10 seconds.</li>
+        <li><strong>Customizable Position:</strong> Starts in the upper-right corner of the screen but can be dragged to any location using the mouse.</li>
+        <li><strong>Always on Top:</strong> The window remains above other applications for easy access.</li>
+        <li><strong>Minimalist Design:</strong> Decor-free floating window with simple control buttons for minimizing or closing the app.</li>
+        <li><strong>Compact Display:</strong> Line-wrapped verses with a clean, readable font on a black background.</li>
+    </ul>
+
+    <h2>Details</h2>
+    <p><strong>Built With:</strong></p>
+    <ul>
+        <li>Python</li>
+        <li>GTK+ 3</li>
+        <li><code>pythonbible</code> library for retrieving Bible content</li>
+    </ul>
+
+    <p><strong>Customization:</strong></p>
+    <ul>
+        <li>Font size, color, and other styles can be adjusted via the embedded CSS.</li>
+        <li>The verse refresh rate can be modified in the code (<code>GLib.timeout_add</code>).</li>
+    </ul>
+
+    <h2>How to Use</h2>
+    <p>This application has been tested and works on Linux-based systems.</p>
+    <ol>
+        <li>
+            Clone the repository:  
+            <pre><code>git clone https://github.com/your-username/bible-verse-display.git</code></pre>
+        </li>
+        <li>
+            Install dependencies:  
+            <pre><code>pip install pythonbible</code></pre>
+            <pre><code>sudo apt-get install python3-gi gir1.2-gtk-3.0</code></pre>
+        </li>
+        <li>
+            Run the application:  
+            <pre><code>python3 app.py</code></pre>
+        </li>
+    </ol>
+
+    <h2>Future Enhancements</h2>
+    <ul>
+        <li>Add support for different Bible translations.</li>
+        <li>Implement user customization for refresh rates and font settings via a settings panel.</li>
+        <li>Allow users to select specific books, chapters, or the testament to display.</li>
+        <li>Add functionality for saving favorite verses to a file.</li>
+    </ul>
+
+    <p>This project is a simple yet effective way to keep the Word of God accessible throughout your day. Contributions and suggestions are welcome! 😊</p>
+</body>
+</html>

@@ -11,7 +11,7 @@ class TextDisplayApp(Gtk.Window):
         super().__init__(title="Bible Verse Display: ASV")
         
         # Set window properties
-        self.set_default_size(300, 100)
+        self.set_default_size(300, 150)
         self.set_keep_above(True)  # Keep window above others
         self.set_decorated(False)
 
@@ -21,11 +21,13 @@ class TextDisplayApp(Gtk.Window):
         self.set_position(Gtk.WindowPosition.NONE)  # Allows precise control with move()
         self.move(screen_width - 320, 10)  # Position with some padding from the edges
 
-        # Enable mouse dragging
-        self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        self.connect("button-press-event", self.on_button_press_event)
-        self.connect("motion-notify-event", self.on_motion_notify_event)
-        self.drag_start_position = None
+        # Initialize variables
+        self.verse_history = []  # Stores the verse history
+        self.current_index = -1  # Tracks the current verse index
+
+        # Variables for click-and-drag
+        self.drag_start_x = 0
+        self.drag_start_y = 0
 
         # Main container
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -55,10 +57,22 @@ class TextDisplayApp(Gtk.Window):
         self.label = Gtk.Label()
         self.label.set_line_wrap(True)
         self.label.set_line_wrap_mode(Gtk.WrapMode.WORD)
-        self.label.set_justify(Gtk.Justification.LEFT)  # Gtk.Justification.CENTER
+        self.label.set_justify(Gtk.Justification.LEFT)
         self.label.set_max_width_chars(30)
         main_box.pack_start(self.label, True, True, 10)
-        
+
+        # Navigation buttons
+        nav_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        main_box.pack_start(nav_box, False, False, 0)
+
+        prev_button = Gtk.Button(label="<<")
+        prev_button.connect("clicked", self.show_previous_verse)
+        nav_box.pack_start(prev_button, True, True, 0)
+
+        next_button = Gtk.Button(label=">>")
+        next_button.connect("clicked", self.show_next_verse)
+        nav_box.pack_start(next_button, True, True, 0)
+
         # Apply CSS
         css = b"""
         label {
@@ -73,20 +87,29 @@ class TextDisplayApp(Gtk.Window):
         context = Gtk.StyleContext()
         context.add_provider_for_screen(Gdk.Screen.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         
-        # Update the label with a random text
+        # Display the first verse
         self.update_text()
-        
-        # Refresh the text every 10 seconds
-        GLib.timeout_add(10000, self.update_text)
 
-    def update_text(self):
-        try:
-            reference, verse = self.get_random_verse()
-            self.label.set_text(f"{reference}\n{verse}")
-        except Bible.errors.VersionMissingVerseError as e:
-            print(f"Error: {e}")
-            self.label.set_text(f"{Bible.get_verse_text(43003016)}")
-        return True  # Continue calling this function
+        # Start the auto-update timer (20 seconds)
+        self.start_auto_update_timer()
+
+        # Enable click-and-drag functionality
+        self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.BUTTON_MOTION_MASK)
+        self.connect("button-press-event", self.on_button_press)
+        self.connect("motion-notify-event", self.on_motion_notify)
+
+    def update_text(self, new_verse=True):
+        if new_verse:
+            try:
+                reference, verse = self.get_random_verse()
+                self.verse_history.append(f"{reference}\n{verse}")
+                self.current_index = len(self.verse_history) - 1
+            except Bible.errors.VersionMissingVerseError as e:
+                print(f"Error: {e}")
+                self.verse_history.append("Error fetching verse.")
+                self.current_index = len(self.verse_history) - 1
+
+        self.label.set_text(self.verse_history[self.current_index])
 
     def get_random_verse(self):
         books = list(Bible.Book)
@@ -104,17 +127,36 @@ class TextDisplayApp(Gtk.Window):
     def minimize_window(self, button):
         self.iconify()
 
-    def on_button_press_event(self, widget, event):
-        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 1:  # Left mouse button
-            self.drag_start_position = (event.x_root, event.y_root)
+    def show_previous_verse(self, button):
+        if self.current_index > 0:
+            self.current_index -= 1
+            self.label.set_text(self.verse_history[self.current_index])
 
-    def on_motion_notify_event(self, widget, event):
-        if self.drag_start_position:
-            delta_x = event.x_root - self.drag_start_position[0]
-            delta_y = event.y_root - self.drag_start_position[1]
-            window_x, window_y = self.get_position()
-            self.move(window_x + delta_x, window_y + delta_y)
-            self.drag_start_position = (event.x_root, event.y_root)
+    def show_next_verse(self, button=None):
+        if self.current_index < len(self.verse_history) - 1:
+            self.current_index += 1
+            self.label.set_text(self.verse_history[self.current_index])
+        else:
+            self.update_text()
+
+    def start_auto_update_timer(self):
+        GLib.timeout_add_seconds(20, self.auto_update)
+
+    def auto_update(self):
+        self.show_next_verse()
+        return True  # Continue the timer
+
+    def on_button_press(self, widget, event):
+        if event.type == Gdk.EventType.BUTTON_PRESS and event.button == 1:
+            self.drag_start_x, self.drag_start_y = event.x_root, event.y_root
+
+    def on_motion_notify(self, widget, event):
+        if event.state & Gdk.ModifierType.BUTTON1_MASK:
+            delta_x = event.x_root - self.drag_start_x
+            delta_y = event.y_root - self.drag_start_y
+            self.drag_start_x, self.drag_start_y = event.x_root, event.y_root
+            pos_x, pos_y = self.get_position()
+            self.move(pos_x + delta_x, pos_y + delta_y)
 
 def main():
     app = TextDisplayApp()
